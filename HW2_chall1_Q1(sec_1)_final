@@ -1,0 +1,33 @@
+
+#include <stdio.h>
+#include <string.h>
+
+int main()
+{
+	char str[1000];
+	int threshold = 1000; // to check upper bound of str buffer
+
+	printf("SPLITTER\n");
+	printf("--------\n");
+	printf("\n");
+
+	str[0] = 0;
+
+	while (1)
+	{
+		char temp[50];
+		scanf("%50s", temp);
+		threshold = threshold + sizeof(temp)+1;
+
+		if (strcmp(temp, ".") == 0 && (threshold>10000))   //check overflow
+			break;
+
+		strncat(str, temp, sizeof(str));
+		strncat(str, "\n", sizeof(str));
+		//1+19*(50+1)=970  <  1000 <  1+20*(50+1)=1021    ==> overflow after 50 times 
+	}
+
+	printf("\n%s\n", str);
+
+	return -14;
+}
