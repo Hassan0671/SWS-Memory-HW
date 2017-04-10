@@ -11,7 +11,7 @@ void main(int argc, char** argv)
 	// first argument is a format string
 	// many programmers assume this is only argument
 
-   printf(argv[1]);  // memory can be dumped with some %s like  printf ("%s%s%s%s%s%s%s%s%s%s%s%s");
+   printf(argv[1]);  // memory can be dumped with some %s like printf ("%s%s%s%s%s%s%s%s%s%s%s%s") or printf ("%08x %08x %08x %08x %08x\n");
 
 	       getch();   //me//
 }
