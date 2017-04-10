@@ -1,0 +1,17 @@
+// FS.cpp : Defines the entry point for the console application.
+//
+#include "stdafx.h"
+
+#include <conio.h> //me//
+#include <stdio.h>
+
+void main(int argc, char** argv)
+{
+	// printf accepts multiple arguments
+	// first argument is a format string
+	// many programmers assume this is only argument
+
+   printf(argv[1]);  // memory can be dumped with some %s like  printf ("%s%s%s%s%s%s%s%s%s%s%s%s");
+
+	       getch();   //me//
+}
