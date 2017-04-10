@@ -1,0 +1,170 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdbool.h>
+#include "canary.h"
+
+#define NOTE_SIZE 1024
+
+bool get_note(char *dest){
+    struct safe_buffer temporary;
+    bool valid;
+
+    get_canary(&temporary.can);//set canary value in *location
+
+    printf("temporary.can.canary:%d\n",temporary.can.canary);
+    printf("&temporary.can.canary:%p\n", &temporary.can.canary);
+    printf("*temporary.can.verify:%d\n",*temporary.can.verify);
+    printf("temporary.can.verify:%p\n",temporary.can.verify);
+
+
+
+
+// exprimentally i have got that After around 310 'A' the canary will be corrupted, and then to
+//rewrite the canary we shoud converted value of discloded canary to hexadecimal and append to 310 'A'
+// to successfully rewrite the canary
+//310A:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA                    
+
+// like this 
+
+
+   printf("Write your note: ");
+   fflush(stdout);
+   fgets(temporary.buf, NOTE_SIZE, stdin);//512-1024
+  
+
+
+  
+
+ printf("..........The Canary'Value after get buffer temporary\n");
+ printf("temporary.can.canary:%d\n",temporary.can.canary);
+ printf("&temporary.can.canary:%p\n", &temporary.can.canary); 
+printf("........And buffer value and address\n");
+// printf("temporary.buf:%d\n",temporary.buf);
+//printf("&temporary.buf:%p\n", &temporary.buf); 
+ 
+//for(i=1; i<12;<i++){
+ // printf ("%02x %02x %02x %10x %10x %10x %10x %10x %10x %10x %10x %10x %08x %08x %08x\n");// viewing the stack
+//}
+    printf("\n P8 \n");
+ //  printf ("\x10\x01\x48\x08 %x %x %x %x %s");
+
+
+
+
+ printf("P1 ");
+    // disallow some characters
+    if (strchr(temporary.buf, '\t') || strchr(temporary.buf, '\r')){
+        valid = false;
+    }else{
+        valid = true;
+        strncpy(dest, temporary.buf, NOTE_SIZE);
+    }
+
+   
+    verify_canary(&temporary.can);
+ printf("\n P2 \n");
+    return valid;
+}
+
+void add_note(char *path){
+    char *new_note = (char *)malloc(1024);
+ printf("\n path: %s \n",path);
+    if (get_note(new_note) == true){ //note passed the check
+        FILE *f;
+ printf("P3 ");
+
+ 
+         if ((f = fopen(path, "a")) == NULL){
+            puts("Cannot write note.");
+            fflush(stdout);
+            free(new_note);
+            printf("P3-1 ");
+            exit(1);
+        } 
+            printf("P4 ");
+
+        fputs(new_note, f);
+       fclose(f);
+
+        puts("Note added.");
+        fflush(stdout);
+    }else{
+        puts("Your note contained invalid characters. Please try again.");
+        fflush(stdout);
+    }
+
+    free(new_note); 
+}
+
+void view_notes(char *path){
+    FILE *f;
+    char note[NOTE_SIZE];
+
+    if ((f = fopen(path, "r")) == NULL){
+        puts("Cannot read notes.");
+        fflush(stdout);
+    }
+
+    while (fgets(note, NOTE_SIZE, f) != NULL){
+        puts(note);
+        fflush(stdout);
+    }
+
+    fclose(f);
+}
+
+void command_loop(){
+    char name[64];
+    char command[16];
+    char *note_file_path;
+
+    printf("Please enter your name: ");
+    fflush(stdout);
+    fgets(name, 64, stdin);
+    name[strcspn(name, "\n")] = '\0';
+
+    if (strchr(name, '.') || strchr(name, '/')){
+        printf("Bad character in name!\n");
+        return;
+    }
+
+    note_file_path = (char *)malloc(strlen(name)+64);//128
+    sprintf(note_file_path, "/home/nevernote/notes/%s", name);
+
+    while (true){
+        printf("Enter a command: ");
+        fflush(stdout);
+        if (fgets(command, 16, stdin) == NULL) goto exit;
+
+        switch (command[0]){
+            case 'a':
+            case 'A':
+                add_note(note_file_path);
+                break;
+            case 'v':
+            case 'V':
+                view_notes(note_file_path);
+                break;
+            case 'q':
+            case 'Q':
+                goto exit;
+            default:
+                puts("Commands: [a]dd_note, [v]iew_notes, [q]uit");
+                fflush(stdout);
+                break;
+        }
+    }
+
+exit:
+    free(note_file_path);
+    return;
+}
+
+int main(int argc, char **argv){
+    register_segfault_handler();
+    command_loop();
+
+    return 0;
+}
+
